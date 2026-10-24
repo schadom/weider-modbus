@@ -35,6 +35,7 @@ async def test_simulator_tcp_read_and_write() -> None:
         assert device.measurements.hot_water_temperature == 42.5
         assert device.measurements.outdoor_temperature == 8.5
         assert device.measurements.room_temperature == 21.5
+        assert device.current_room_temperature == 21.5
         assert device.digital_inputs.compressor is True
         assert device.digital_inputs.remote_fault is False
         await device.async_set_room_target(23.5)

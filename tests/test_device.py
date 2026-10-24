@@ -112,7 +112,7 @@ async def test_registers_read_in_blocks(
         (714, 1),
     ]
     assert blocks["input"] == [
-        (12, 10), (25, 5), (31, 1), (33, 1), (35, 3), (44, 1), (736, 1),
+        (12, 10), (25, 5), (31, 1), (33, 1), (35, 3), (44, 1), (724, 1), (736, 1),
         (60164, 2), (60168, 2), (63000, 16),
     ]  # fmt: skip
     assert blocks["holding"] == [(1, 1), (723, 1)]
@@ -198,6 +198,7 @@ async def test_digital_input_communication_errors_propagate(
     ("field", "address"),
     [
         ("room_temperature", 12),
+        ("custom_map_room_temperature", 724),
         ("mixer_position", 736),
         ("last_pump_runtime", 60164),
         ("last_hot_water_runtime", 60168),
@@ -293,3 +294,44 @@ async def test_read_raw(device: WeiderWT16) -> None:
 
 def test_identity(device: WeiderWT16) -> None:
     assert (device.manufacturer, device.model) == ("Weider", "WT16")
+
+
+@pytest.mark.parametrize(
+    ("register_12", "register_724", "expected"),
+    [
+        (215, 0, 21.5),  # standard map: 724 is not used
+        (0, 215, 21.5),  # custom map: 12 answers 0, the value is at 724
+        (215, 230, 21.5),  # both hold a value: the standard register wins
+        (0, 0, None),  # neither register holds a value
+    ],
+)
+async def test_current_room_temperature(
+    unit: MockModbusUnit,
+    device: WeiderWT16,
+    register_12: int,
+    register_724: int,
+    expected: float | None,
+) -> None:
+    unit.input.update({12: register_12, 724: register_724})
+    assert device.current_room_temperature is None
+    await device.async_update()
+    assert device.current_room_temperature == expected
+
+
+async def test_current_room_temperature_without_register_12(
+    unit: MockModbusUnit, device: WeiderWT16
+) -> None:
+    unit.fail_read(12, IllegalDataAddressError(), register_type="input")
+    unit.input[724] = 225
+    await device.async_update()
+    assert device.measurements.hot_water_temperature == 42.5
+    assert device.current_room_temperature == 22.5
+
+
+async def test_current_room_temperature_without_room_registers(
+    unit: MockModbusUnit, device: WeiderWT16
+) -> None:
+    for address in (12, 724):
+        unit.fail_read(address, IllegalDataAddressError(), register_type="input")
+    await device.async_update()
+    assert device.current_room_temperature is None
