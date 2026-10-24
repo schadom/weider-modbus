@@ -22,7 +22,7 @@ async def test_reads_and_fc16_writes(unit: MockModbusUnit, device: WeiderWT16) -
     assert device.settings.hot_water_target_temperature == 45
     assert all(event.count <= 50 for event in unit.read_events)
     assert not any(
-        event.address <= 725 < event.address + event.count
+        event.address <= 22 < event.address + event.count
         for event in unit.read_events
         if event.register_type == "input"
     )
@@ -112,7 +112,7 @@ async def test_registers_read_in_blocks(
         (714, 1),
     ]
     assert blocks["input"] == [
-        (13, 9), (25, 5), (31, 1), (33, 1), (35, 3), (44, 1), (724, 1), (736, 1),
+        (12, 10), (25, 5), (31, 1), (33, 1), (35, 3), (44, 1), (736, 1),
         (60164, 2), (60168, 2), (63000, 16),
     ]  # fmt: skip
     assert blocks["holding"] == [(1, 1), (723, 1)]
@@ -197,7 +197,7 @@ async def test_digital_input_communication_errors_propagate(
 @pytest.mark.parametrize(
     ("field", "address"),
     [
-        ("room_temperature", 724),
+        ("room_temperature", 12),
         ("mixer_position", 736),
         ("last_pump_runtime", 60164),
         ("last_hot_water_runtime", 60168),

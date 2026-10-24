@@ -69,6 +69,9 @@ does not provide the register.
 
 ### Optional registers
 
+The room temperature is read from input register 12 (`BET.T.A.1`, the measured
+sensor value) of the standard Modbus map.
+
 Some firmware versions do not provide every register. The room temperature,
 room target, mixer position, runtimes, active error text and any digital input
 are optional. If the device rejects one of them with an illegal data address,
