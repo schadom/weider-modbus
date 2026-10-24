@@ -11,7 +11,7 @@ from weider_modbus import WeiderWT16
 @pytest.fixture
 def unit(mock_modbus_unit: MockModbusUnit) -> MockModbusUnit:
     """A mock WT16 with a few known register values."""
-    mock_modbus_unit.input.update({13: 425, 724: 215, 44: 1234, 60164: [1, 2]})
+    mock_modbus_unit.input.update({12: 215, 13: 425, 44: 1234, 60164: [1, 2]})
     mock_modbus_unit.holding.update({1: 450, 723: 220})
     mock_modbus_unit.discrete[679] = True
     return mock_modbus_unit
