@@ -146,7 +146,8 @@ class Measurements(Component):
     max_gap = 1
     max_span = 50
 
-    # Room temperature measured by the room sensor (parameter BET.T.A.1).
+    # Room temperature measured by the room sensor (parameter BET.T.A.1),
+    # standard Modbus map.
     room_temperature = _temperature(12)
     hot_water_temperature = _temperature(13)
     flow_target_temperature = _temperature(14)
@@ -168,6 +169,9 @@ class Measurements(Component):
     suction_gas_temperature = _temperature(36)
     hot_gas_temperature = _temperature(37)
     volume_flow = gauge(44, 0.001, signed=False, unit="m³/h")
+    # Room temperature on a custom Modbus map that Weider configures on
+    # request. Such a map answers 0 at register 12 instead.
+    custom_map_room_temperature = _temperature(724)
     mixer_position = integer(736, signed=False)
     last_pump_runtime = uint32(60164, unit="min")
     last_hot_water_runtime = uint32(60168, unit="min")
@@ -177,6 +181,7 @@ class Measurements(Component):
     OPTIONAL_FIELDS: ClassVar[frozenset[str]] = frozenset(
         {
             "room_temperature",
+            "custom_map_room_temperature",
             "mixer_position",
             "last_pump_runtime",
             "last_hot_water_runtime",

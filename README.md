@@ -43,6 +43,7 @@ async def main() -> None:
         await device.async_update()
 
         print("Hot water:", device.measurements.hot_water_temperature)
+        print("Room:", device.current_room_temperature)
         outdoor = plausible_temperature(device.measurements.outdoor_temperature)
         print("Outdoor:", outdoor)
         print("Compressor running:", device.digital_inputs.compressor)
@@ -70,7 +71,12 @@ does not provide the register.
 ### Optional registers
 
 The room temperature is read from input register 12 (`BET.T.A.1`, the measured
-sensor value) of the standard Modbus map.
+sensor value) of the standard Modbus map. Some heat pumps have a custom Modbus
+map that Weider configures on request. Such a map answers 0 at register 12 and
+provides the room temperature at register 724 instead
+(`measurements.custom_map_room_temperature`). Use
+`device.current_room_temperature` for the value to display: register 12 if it is
+non-zero, otherwise register 724 if it is non-zero, otherwise `None`.
 
 Some firmware versions do not provide every register. The room temperature,
 room target, mixer position, runtimes, active error text and any digital input

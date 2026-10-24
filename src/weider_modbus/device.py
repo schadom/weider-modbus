@@ -17,6 +17,9 @@ if TYPE_CHECKING:
 # Attribute names of the components, in polling order.
 COMPONENTS: Final = ("measurements", "settings", "digital_inputs")
 
+# Measurements that can hold the room temperature, in order of preference.
+ROOM_TEMPERATURE_FIELDS: Final = ("room_temperature", "custom_map_room_temperature")
+
 
 class WeiderWT16(Device):
     """One Weider WT16 heat pump, reached through a ``ModbusUnit``.
@@ -63,6 +66,23 @@ class WeiderWT16(Device):
         ``AttributeError`` if this device does not provide the register.
         """
         await self.settings.write("room_target_temperature", temperature)
+
+    @property
+    def current_room_temperature(self) -> float | None:
+        """The room temperature, from whichever register holds it.
+
+        The standard Modbus map provides it at register 12, a custom map at
+        register 724. A map answers 0 for the register it does not use, so 0
+        means "not provided" here; a real room temperature of exactly 0.0 °C
+        does not occur. Returns ``None`` if neither register holds a value, or
+        before the first poll.
+        """
+        for name in ROOM_TEMPERATURE_FIELDS:
+            if name in self.measurements.resolved_fields:
+                value: float | None = getattr(self.measurements, name)
+                if value:
+                    return value
+        return None
 
     @property
     def sg_ready_mode(self) -> SgReadyMode | None:
