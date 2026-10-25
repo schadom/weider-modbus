@@ -14,14 +14,14 @@ opens a connection itself, so it works over any modbus-connection backend
 
 ## Supported controllers
 
-| Controller | Modbus | Class |
-| --- | --- | --- |
-| WeiTronic WT16 | Yes | `WeiderWT16` |
-| WeiTronic WT08 | No | Not supported |
+| Controller | RS485 | Ethernet | Modbus | Modbus TCP | Class |
+| --- | --- | --- | --- | --- | --- |
+| WeiTronic WT16 | Yes | Yes | Master/Slave | Yes | `WeiderWT16` |
+| WeiTronic WT08 | Yes | No | Master | No | Not supported |
 
-Only the WT16 controller has a Modbus interface. The Modbus layout is specific
-to the controller model, so each supported model has its own class, and
-`device.model` returns the model name.
+The library reads the controller as a Modbus slave, which only the WT16
+supports. The Modbus layout is specific to the controller model, so each
+supported model has its own class, and `device.model` returns the model name.
 
 ## Installation
 
