@@ -54,7 +54,8 @@ def _target_temperature(
 ) -> NumberField[float]:
     """Return a writable, unsigned, 0.1-scaled target temperature.
 
-    The device only accepts function code 16 for these registers.
+    Writes use function code 16 (Write Multiple Registers) with a single
+    register, which the WT16 accepts for these registers.
     """
     return gauge(
         address,
