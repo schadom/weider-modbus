@@ -1,6 +1,6 @@
 # weider-modbus
 
-Async Python library for the Modbus TCP interface of Weider WT16 heat pumps,
+Async Python library for the Modbus TCP interface of Weider heat pumps,
 built on [modbus-connection](https://github.com/home-assistant-libs/modbus-connection).
 
 > [!IMPORTANT]
@@ -10,7 +10,18 @@ built on [modbus-connection](https://github.com/home-assistant-libs/modbus-conne
 The library only reads and writes registers. It takes a `ModbusUnit` and never
 opens a connection itself, so it works over any modbus-connection backend
 (tmodbus, pymodbus, or the in-memory mock). It is used by the
-[Weider WT16 Home Assistant integration](https://github.com/schadom/hacs_weider).
+[Weider Home Assistant integration](https://github.com/schadom/hacs_weider).
+
+## Supported controllers
+
+| Controller | Modbus | Class |
+| --- | --- | --- |
+| WeiTronic WT16 | Yes | `WeiderWT16` |
+| WeiTronic WT08 | No | Not supported |
+
+Only the WT16 controller has a Modbus interface. The Modbus layout is specific
+to the controller model, so each supported model has its own class, and
+`device.model` returns the model name.
 
 ## Installation
 
