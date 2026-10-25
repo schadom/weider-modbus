@@ -1,4 +1,7 @@
-"""Async Python library for the Modbus TCP interface of Weider WT16 heat pumps."""
+"""Async Python library for the Modbus TCP interface of Weider heat pumps.
+
+Each supported controller has its own device class, such as ``WeiderWT16``.
+"""
 
 from .components import DigitalInputs, Measurements, Settings
 from .const import (
