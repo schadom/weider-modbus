@@ -102,7 +102,15 @@ other register error still raises, so real problems are not hidden.
 connection reopens on the next request, so the caller can simply retry.
 
 The target setters raise `ValueError` for a value outside the allowed range
-(hot water 15–55 °C, room 15–35 °C), before anything is written.
+(hot water 15–55 °C, room 5–35 °C), before anything is written.
+
+### Writing targets
+
+The controller stores the target temperatures in flash memory. Flash memory
+tolerates only a limited number of write cycles (typically around 100,000), and
+exceeding it can damage the controller. Write a target only when it actually
+changes, and do not write targets on a short schedule or from a fast control
+loop.
 
 ### Helpers
 

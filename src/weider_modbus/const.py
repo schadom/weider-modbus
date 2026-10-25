@@ -10,7 +10,7 @@ MODEL: Final = "WT16"
 # Allowed write ranges for the target temperatures, in °C (inclusive).
 HOT_WATER_TARGET_MIN: Final = 15.0
 HOT_WATER_TARGET_MAX: Final = 55.0
-ROOM_TARGET_MIN: Final = 15.0
+ROOM_TARGET_MIN: Final = 5.0
 ROOM_TARGET_MAX: Final = 35.0
 TARGET_STEP: Final = 0.5
 

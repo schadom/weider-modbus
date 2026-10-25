@@ -51,7 +51,7 @@ async def test_room_target_write(unit: MockModbusUnit, device: WeiderWT16) -> No
     [
         ("async_set_hot_water_target", 14.5),
         ("async_set_hot_water_target", 55.5),
-        ("async_set_room_target", 14.5),
+        ("async_set_room_target", 4.5),
         ("async_set_room_target", 35.5),
     ],
 )
@@ -70,6 +70,7 @@ async def test_target_out_of_range_is_not_written(
     [
         ("async_set_hot_water_target", 15),
         ("async_set_hot_water_target", 55),
+        ("async_set_room_target", 5),
         ("async_set_room_target", 35),
     ],
 )
