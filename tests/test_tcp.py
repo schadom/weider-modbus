@@ -13,7 +13,7 @@ from modbus_connection import ModbusTcpParams
 from modbus_connection.tmodbus import ModbusConnection
 from pymodbus.server import ModbusTcpServer
 
-from weider_modbus import WeiderWT16
+from weider_modbus import WeiderWT16TCP
 
 from .simulator import create_device
 
@@ -30,7 +30,7 @@ async def test_simulator_tcp_read_and_write() -> None:
     await server.serve_forever(background=True)
     connection = ModbusConnection(ModbusTcpParams(host="127.0.0.1", port=port))
     try:
-        device = WeiderWT16(connection.for_unit(1))
+        device = WeiderWT16TCP(connection.for_unit(1))
         await device.async_update()
         assert device.measurements.hot_water_temperature == 42.5
         assert device.measurements.outdoor_temperature == 8.5

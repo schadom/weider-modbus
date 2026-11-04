@@ -16,12 +16,15 @@ opens a connection itself, so it works over any modbus-connection backend
 
 | Controller | RS485 | Ethernet | Modbus | Modbus TCP | Class |
 | --- | --- | --- | --- | --- | --- |
-| WeiTronic WT16 | Yes | Yes | Master/Slave | Yes | `WeiderWT16` (TCP), `WeiderWT16RTU` (RS485) |
+| WeiTronic WT16 | Yes | Yes | Master/Slave | Yes | `WeiderWT16TCP` (TCP), `WeiderWT16RTU` (RS485) |
 | WeiTronic WT08 | Yes | No | Master | No | Not supported |
 
 The library reads the controller as a Modbus slave, which only the WT16
 supports. The Modbus layout is specific to the controller model and to the
 interface, so each has its own class, and `device.model` returns the model name.
+
+`WeiderWT16TCP` was called `WeiderWT16` before version 0.2.0. The old name
+still works but is deprecated and will be removed in version 1.0.
 
 ## Register maps
 
@@ -29,7 +32,7 @@ The WT16 has two Modbus interfaces with different register maps:
 
 | | Modbus TCP | Modbus RTU |
 | --- | --- | --- |
-| Class | `WeiderWT16` | `WeiderWT16RTU` |
+| Class | `WeiderWT16TCP` | `WeiderWT16RTU` |
 | Connection | Ethernet board (RJ45) | RS485 port X9 ("Modbus 1") |
 | Reads | Input registers (FC04), holding registers (FC03), discrete inputs (FC02) | Holding registers only (FC03) |
 | Target writes | FC16 | FC06 |
@@ -80,13 +83,13 @@ import asyncio
 from modbus_connection import ModbusTcpParams
 from modbus_connection.tmodbus import ModbusConnection
 
-from weider_modbus import WeiderWT16, plausible_temperature
+from weider_modbus import WeiderWT16TCP, plausible_temperature
 
 
 async def main() -> None:
     connection = ModbusConnection(ModbusTcpParams(host="192.168.1.50", port=502))
     try:
-        device = WeiderWT16(connection.for_unit(1))
+        device = WeiderWT16TCP(connection.for_unit(1))
         await device.async_update()
 
         print("Hot water:", device.measurements.hot_water_temperature)

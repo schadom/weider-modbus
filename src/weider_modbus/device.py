@@ -101,7 +101,7 @@ class _WeiderDevice(Device):
         return await super().async_read_raw(names)
 
 
-class WeiderWT16(_WeiderDevice):
+class WeiderWT16TCP(_WeiderDevice):
     """One Weider WT16 heat pump on its Modbus TCP map (Ethernet board).
 
     The consumer owns the connection and passes a unit. This library only
