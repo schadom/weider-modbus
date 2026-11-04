@@ -63,8 +63,8 @@ class RtuMeasurements(Component):
     last_heating_runtime = integer(1148, signed=False, unit="min")
     last_hot_water_runtime = integer(1149, signed=False, unit="min")
     heat_energy = integer(1195, signed=False, unit="kWh")
-    # Number of the active error, 0 if there is none.
-    active_error_code = integer(4079, signed=False)
+    # Number of the active error. The controller reports -1 if there is none.
+    active_error_code = integer(4079)
     # SG Ready operating state set manually on the controller (0 to 3).
     sg_ready_manual_mode = integer(4086, signed=False)
 

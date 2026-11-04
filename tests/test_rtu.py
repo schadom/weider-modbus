@@ -31,7 +31,7 @@ def rtu_unit(mock_modbus_unit: MockModbusUnit) -> MockModbusUnit:
             724: 231,
             1137: 40000,
             1195: 35000,
-            4079: 0,
+            4079: 65535,  # -1: no active error
             679: 1,
             685: 0,
             723: 230,
@@ -57,6 +57,11 @@ async def test_reads_holding_registers_only(
     assert rtu_device.measurements.winter_mode is True
     assert rtu_device.settings.hot_water_target_temperature == 48
     assert rtu_device.settings.room_target_temperature == 23
+
+
+async def test_no_active_error_reads_minus_one(rtu_device: WeiderWT16RTU) -> None:
+    await rtu_device.async_update()
+    assert rtu_device.measurements.active_error_code == -1
 
 
 async def test_counters_are_unsigned(rtu_device: WeiderWT16RTU) -> None:
