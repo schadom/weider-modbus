@@ -10,6 +10,7 @@ from modbus_connection.model import Device, Raw
 from .components import DigitalInputs, Measurements, Settings
 from .const import MANUFACTURER, MODEL
 from .helpers import SgReadyMode, sg_ready_mode
+from .rtu import RtuDigitalInputs, RtuMeasurements, RtuSettings
 
 if TYPE_CHECKING:
     from modbus_connection import ModbusUnit
@@ -21,22 +22,19 @@ COMPONENTS: Final = ("measurements", "settings", "digital_inputs")
 ROOM_TEMPERATURE_FIELDS: Final = ("room_temperature", "custom_map_room_temperature")
 
 
-class WeiderWT16(Device):
-    """One Weider WT16 heat pump, reached through a ``ModbusUnit``.
+class _WeiderDevice(Device):
+    """Behaviour shared by both register maps of the WT16.
 
-    The consumer owns the connection and passes a unit. This library only
-    reads and writes registers, so it works over any modbus-connection backend.
+    Subclasses create the ``measurements``, ``settings`` and
+    ``digital_inputs`` components for their register map.
     """
 
     manufacturer: Final = MANUFACTURER
     model: Final = MODEL
 
-    def __init__(self, unit: ModbusUnit) -> None:
-        """Create the device and its components. No I/O happens here."""
-        super().__init__(unit)
-        self.measurements = Measurements(unit)
-        self.settings = Settings(unit)
-        self.digital_inputs = DigitalInputs(unit)
+    measurements: Measurements | RtuMeasurements
+    settings: Settings | RtuSettings
+    digital_inputs: DigitalInputs | RtuDigitalInputs
 
     async def async_update(self) -> None:
         """Refresh every component.
@@ -86,10 +84,57 @@ class WeiderWT16(Device):
 
     @property
     def sg_ready_mode(self) -> SgReadyMode | None:
-        """The SG Ready operating state, derived from the digital inputs."""
+        """The SG Ready operating state, derived from the digital inputs.
+
+        The RS485 map has no SG Ready inputs, so there the state is only
+        known while the utility company block is active.
+        """
         inputs = self.digital_inputs
-        return sg_ready_mode(inputs.utility_block, inputs.sg_ready_1, inputs.sg_ready_2)
+        return sg_ready_mode(
+            inputs.utility_block,
+            getattr(inputs, "sg_ready_1", None),
+            getattr(inputs, "sg_ready_2", None),
+        )
 
     async def async_read_raw(self, names: Iterable[str] = COMPONENTS) -> Raw:
         """Return every register this device reads, undecoded, for diagnostics."""
         return await super().async_read_raw(names)
+
+
+class WeiderWT16(_WeiderDevice):
+    """One Weider WT16 heat pump on its Modbus TCP map (Ethernet board).
+
+    The consumer owns the connection and passes a unit. This library only
+    reads and writes registers, so it works over any modbus-connection backend.
+    """
+
+    measurements: Measurements
+    settings: Settings
+    digital_inputs: DigitalInputs
+
+    def __init__(self, unit: ModbusUnit) -> None:
+        """Create the device and its components. No I/O happens here."""
+        super().__init__(unit)
+        self.measurements = Measurements(unit)
+        self.settings = Settings(unit)
+        self.digital_inputs = DigitalInputs(unit)
+
+
+class WeiderWT16RTU(_WeiderDevice):
+    """One Weider WT16 heat pump on its RS485 map (Modbus RTU, terminal X9).
+
+    The RS485 port talks to the controller directly. Its register map differs
+    from the Modbus TCP map; values on both maps use the same attribute names.
+    The unit can be a serial link or a converter that carries RTU over TCP.
+    """
+
+    measurements: RtuMeasurements
+    settings: RtuSettings
+    digital_inputs: RtuDigitalInputs
+
+    def __init__(self, unit: ModbusUnit) -> None:
+        """Create the device and its components. No I/O happens here."""
+        super().__init__(unit)
+        self.measurements = RtuMeasurements(unit)
+        self.settings = RtuSettings(unit)
+        self.digital_inputs = RtuDigitalInputs(unit)
