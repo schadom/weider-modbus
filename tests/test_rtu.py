@@ -26,7 +26,7 @@ def rtu_unit(mock_modbus_unit: MockModbusUnit) -> MockModbusUnit:
             1: 480,
             2: 576,
             15: 65516,  # -2.0 °C
-            62: 271,
+            26: 271,
             454: 1,
             724: 231,
             1137: 40000,
@@ -82,7 +82,7 @@ async def test_registers_read_in_blocks(
     await rtu_device.async_update()
     blocks = sorted((e.address, e.count) for e in rtu_unit.read_events)
     assert blocks == [
-        (1, 1), (2, 1), (4, 1), (15, 2), (18, 3), (25, 1), (27, 2), (62, 1),
+        (1, 1), (2, 1), (4, 1), (15, 2), (18, 3), (25, 4),
         (451, 1), (452, 1), (454, 1), (679, 4), (685, 2), (691, 5), (703, 3),
         (723, 1), (724, 1), (726, 2), (736, 1), (767, 1), (1137, 2), (1148, 2),
         (1195, 1), (4079, 1), (4086, 1),

@@ -37,8 +37,8 @@ The WT16 has two Modbus interfaces with different register maps:
 Values on both maps use the same attribute names, units and scaling, so a
 consumer reads either device the same way. Several values sit at other
 addresses: for example the hot water temperature is input register 13 on TCP
-and holding register 2 on RTU, the return temperature input register 26 on TCP
-and holding register 62 on RTU.
+and holding register 2 on RTU, the room temperature input register 12 on TCP and
+holding register 724 on RTU.
 
 Some values exist on only one map. A value a map does not provide is not an
 attribute of that device's components.
@@ -185,8 +185,9 @@ test simulator checks the software against this map, not the map against a
 real heat pump.
 
 The RTU map has been checked on a WT16 over a USB-RS485 adapter (19200 baud,
-8N2) for the hot water temperature, outdoor temperature and hot water target.
-The remaining RTU registers still need confirming on real hardware.
+8N2), including reads of adjacent registers in one request. A temperature
+sensor that is not connected reads -99.9 °C on RTU; `plausible_temperature`
+treats it as unknown. When there is no active error, the error number is -1.
 
 ## Development
 

@@ -46,9 +46,9 @@ class RtuMeasurements(Component):
     reserve_temperature_2 = _temperature(19)
     reserve_temperature_3 = _temperature(20)
     flow_temperature = _temperature(25)
+    return_temperature = _temperature(26)
     source_inlet_temperature = _temperature(27)
     source_outlet_temperature = _temperature(28)
-    return_temperature = _temperature(62)
     average_outdoor_temperature = _temperature(452)
     # 0 is summer operation, 1 is winter operation.
     winter_mode = boolean(454)
