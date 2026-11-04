@@ -1,7 +1,7 @@
 # weider-modbus
 
-Async Python library for the Modbus TCP interface of Weider heat pumps,
-built on [modbus-connection](https://github.com/home-assistant-libs/modbus-connection).
+Async Python library for the Modbus interfaces (TCP and RTU) of Weider heat
+pumps, built on [modbus-connection](https://github.com/home-assistant-libs/modbus-connection).
 
 > [!IMPORTANT]
 > This library is not affiliated with Weider Wärmepumpen GmbH and is provided
@@ -16,12 +16,51 @@ opens a connection itself, so it works over any modbus-connection backend
 
 | Controller | RS485 | Ethernet | Modbus | Modbus TCP | Class |
 | --- | --- | --- | --- | --- | --- |
-| WeiTronic WT16 | Yes | Yes | Master/Slave | Yes | `WeiderWT16` |
+| WeiTronic WT16 | Yes | Yes | Master/Slave | Yes | `WeiderWT16TCP` (TCP), `WeiderWT16RTU` (RS485) |
 | WeiTronic WT08 | Yes | No | Master | No | Not supported |
 
 The library reads the controller as a Modbus slave, which only the WT16
-supports. The Modbus layout is specific to the controller model, so each
-supported model has its own class, and `device.model` returns the model name.
+supports. The Modbus layout is specific to the controller model and to the
+interface, so each has its own class, and `device.model` returns the model name.
+
+`WeiderWT16TCP` was called `WeiderWT16` before version 0.2.0. The old name
+still works but is deprecated and will be removed in version 1.0.
+
+## Register maps
+
+The WT16 has two Modbus interfaces with different register maps:
+
+| | Modbus TCP | Modbus RTU |
+| --- | --- | --- |
+| Class | `WeiderWT16TCP` | `WeiderWT16RTU` |
+| Connection | Ethernet board (RJ45) | RS485 port X9 ("Modbus 1") |
+| Reads | Input registers (FC04), holding registers (FC03), discrete inputs (FC02) | Holding registers only (FC03) |
+| Target writes | FC16 | FC06 |
+
+Values on both maps use the same attribute names, units and scaling, so a
+consumer reads either device the same way. Several values sit at other
+addresses: for example the hot water temperature is input register 13 on TCP
+and holding register 2 on RTU, the room temperature input register 12 on TCP and
+holding register 724 on RTU.
+
+Some values exist on only one map. A value a map does not provide is not an
+attribute of that device's components.
+
+- **TCP only:** refrigerant circuit temperatures (superheat, evaporation,
+  condensation, evaporator, suction gas, hot gas, defrost), flow target and
+  mixer temperature, volume flow, flow switches, 4-way valve, SG Ready inputs,
+  last pump runtime (32-bit) and the active error text.
+- **RTU only:** hot water hysteresis, heating limit temperature, average outdoor
+  temperature, summer/winter mode, flow target and flow temperature of heating
+  circuit 1, mixer 2 position, operating hours, last heating runtime, heat meter
+  energy (kWh), the active error number and the manual SG Ready mode.
+
+On RTU, the runtimes and counters are 16-bit values. Only the two target
+temperatures are writable on either map.
+
+The RS485 port connects directly to the controller, so it is not affected by
+the Ethernet board's network resets. It must be enabled on the controller as a
+Modbus slave in RTU mode (Modbus 1); ask Weider for the required settings.
 
 ## Installation
 
@@ -44,13 +83,13 @@ import asyncio
 from modbus_connection import ModbusTcpParams
 from modbus_connection.tmodbus import ModbusConnection
 
-from weider_modbus import WeiderWT16, plausible_temperature
+from weider_modbus import WeiderWT16TCP, plausible_temperature
 
 
 async def main() -> None:
     connection = ModbusConnection(ModbusTcpParams(host="192.168.1.50", port=502))
     try:
-        device = WeiderWT16(connection.for_unit(1))
+        device = WeiderWT16TCP(connection.for_unit(1))
         await device.async_update()
 
         print("Hot water:", device.measurements.hot_water_temperature)
@@ -68,13 +107,32 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
+Over RS485, open a serial connection and use `WeiderWT16RTU`. The serial
+settings must match the controller's Modbus 1 settings:
+
+```python
+from modbus_connection import ModbusSerialParams
+
+from weider_modbus import WeiderWT16RTU
+
+connection = ModbusConnection(
+    ModbusSerialParams(
+        device="/dev/serial/by-id/usb-1a86_USB_Single_Serial_0123456789-if00",
+        baudrate=19200,
+        parity="N",
+        stopbits=2,
+    )
+)
+device = WeiderWT16RTU(connection.for_unit(1))
+```
+
 ### Components
 
-| Attribute | Modbus space | Content |
+| Attribute | Modbus space (TCP / RTU) | Content |
 | --- | --- | --- |
-| `device.measurements` | Input registers (FC04) | Temperatures, volume flow, runtimes, mixer position, active error text |
-| `device.settings` | Holding registers (FC03/FC16) | Hot water and room target temperatures |
-| `device.digital_inputs` | Discrete inputs (FC02) | Compressor, pumps, valves, blocks, SG Ready inputs |
+| `device.measurements` | Input registers (FC04) / holding registers (FC03) | Temperatures, volume flow, runtimes, counters, mixer position, active error |
+| `device.settings` | Holding registers (FC03/FC16) / holding registers (FC03/FC06) | Target temperatures; on RTU also hysteresis and heating limit (read-only) |
+| `device.digital_inputs` | Discrete inputs (FC02) / 0/1 holding registers (FC03) | Compressor, pumps, valves, blocks, SG Ready inputs |
 
 A value reads as `None` until the first successful poll, or if the device
 does not provide the register.
@@ -128,6 +186,11 @@ multi-register word order come from the existing integration. Confirm them
 against your WT16 documentation, especially for negative temperatures. The
 test simulator checks the software against this map, not the map against a
 real heat pump.
+
+The RTU map has been checked on a WT16 over a USB-RS485 adapter (19200 baud,
+8N2), including reads of adjacent registers in one request. A temperature
+sensor that is not connected reads -99.9 °C on RTU; `plausible_temperature`
+treats it as unknown. When there is no active error, the error number is -1.
 
 ## Development
 

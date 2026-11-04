@@ -50,12 +50,13 @@ def _range_validator(minimum: float, maximum: float) -> Callable[[float], float]
 
 
 def _target_temperature(
-    address: int, minimum: float, maximum: float
+    address: int, minimum: float, maximum: float, *, force_fc16: bool = True
 ) -> NumberField[float]:
     """Return a writable, unsigned, 0.1-scaled target temperature.
 
-    Writes use function code 16 (Write Multiple Registers) with a single
-    register, which the WT16 accepts for these registers.
+    Over Modbus TCP, writes use function code 16 (Write Multiple Registers)
+    with a single register, which the WT16 accepts for these registers. The
+    RS485 port only supports function code 06 (Write Single Register).
     """
     return gauge(
         address,
@@ -63,7 +64,7 @@ def _target_temperature(
         signed=False,
         unit="°C",
         writable=_range_validator(minimum, maximum),
-        force_fc16=True,
+        force_fc16=force_fc16,
     )
 
 

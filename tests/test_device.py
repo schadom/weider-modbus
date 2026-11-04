@@ -9,10 +9,12 @@ from modbus_connection import ModbusError
 from modbus_connection.exceptions import IllegalDataAddressError, IllegalDataValueError
 from modbus_connection.mock import MockModbusUnit, WriteEvent
 
-from weider_modbus import SgReadyMode, WeiderWT16
+from weider_modbus import SgReadyMode, WeiderWT16TCP
 
 
-async def test_reads_and_fc16_writes(unit: MockModbusUnit, device: WeiderWT16) -> None:
+async def test_reads_and_fc16_writes(
+    unit: MockModbusUnit, device: WeiderWT16TCP
+) -> None:
     await device.async_update()
     assert device.measurements.hot_water_temperature == 42.5
     assert device.measurements.room_temperature == 21.5
@@ -39,7 +41,7 @@ async def test_reads_and_fc16_writes(unit: MockModbusUnit, device: WeiderWT16) -
     assert device.settings.hot_water_target_temperature == 47.5
 
 
-async def test_room_target_write(unit: MockModbusUnit, device: WeiderWT16) -> None:
+async def test_room_target_write(unit: MockModbusUnit, device: WeiderWT16TCP) -> None:
     events: list[WriteEvent] = []
     unit.on_write(events.append)
     await device.async_set_room_target(23.5)
@@ -56,7 +58,7 @@ async def test_room_target_write(unit: MockModbusUnit, device: WeiderWT16) -> No
     ],
 )
 async def test_target_out_of_range_is_not_written(
-    unit: MockModbusUnit, device: WeiderWT16, method: str, value: float
+    unit: MockModbusUnit, device: WeiderWT16TCP, method: str, value: float
 ) -> None:
     events: list[WriteEvent] = []
     unit.on_write(events.append)
@@ -75,7 +77,7 @@ async def test_target_out_of_range_is_not_written(
     ],
 )
 async def test_target_range_is_inclusive(
-    device: WeiderWT16, method: str, value: float
+    device: WeiderWT16TCP, method: str, value: float
 ) -> None:
     await getattr(device, method)(value)
 
@@ -84,7 +86,7 @@ async def test_target_range_is_inclusive(
     ("raw", "expected"), [(85, 8.5), (0, 0.0), (65516, -2.0), (65336, -20.0)]
 )
 async def test_temperatures_below_zero(
-    unit: MockModbusUnit, device: WeiderWT16, raw: int, expected: float
+    unit: MockModbusUnit, device: WeiderWT16TCP, raw: int, expected: float
 ) -> None:
     unit.input.update({15: raw, 27: raw, 31: raw})
     await device.async_update()
@@ -94,7 +96,7 @@ async def test_temperatures_below_zero(
 
 
 async def test_registers_read_in_blocks(
-    unit: MockModbusUnit, device: WeiderWT16
+    unit: MockModbusUnit, device: WeiderWT16TCP
 ) -> None:
     await device.async_update()
     blocks = {
@@ -121,7 +123,7 @@ async def test_registers_read_in_blocks(
 
 @pytest.mark.parametrize("previously_supported", [False, True])
 async def test_unsupported_digital_inputs(
-    unit: MockModbusUnit, device: WeiderWT16, previously_supported: bool
+    unit: MockModbusUnit, device: WeiderWT16TCP, previously_supported: bool
 ) -> None:
     unit.discrete[690] = True
     if previously_supported:
@@ -149,12 +151,12 @@ async def test_unsupported_digital_inputs(
         assert device.digital_inputs.compressor is False
         assert rejected == first_rejections
     # A fresh device starts from the full declared layout again.
-    assert WeiderWT16(unit).digital_inputs.four_way_valve is None
-    assert "four_way_valve" in WeiderWT16(unit).digital_inputs.resolved_fields
+    assert WeiderWT16TCP(unit).digital_inputs.four_way_valve is None
+    assert "four_way_valve" in WeiderWT16TCP(unit).digital_inputs.resolved_fields
 
 
 async def test_unsupported_input_inside_block(
-    unit: MockModbusUnit, device: WeiderWT16
+    unit: MockModbusUnit, device: WeiderWT16TCP
 ) -> None:
     unit.discrete.update({691: True, 695: True})
     unit.fail_read(690, IllegalDataAddressError(), register_type="discrete")
@@ -172,7 +174,7 @@ async def test_unsupported_input_inside_block(
 
 
 async def test_unsupported_core_register_inside_block_still_fails(
-    unit: MockModbusUnit, device: WeiderWT16
+    unit: MockModbusUnit, device: WeiderWT16TCP
 ) -> None:
     unit.fail_read(17, IllegalDataAddressError(), register_type="input")
     with pytest.raises(IllegalDataAddressError):
@@ -185,7 +187,7 @@ async def test_unsupported_core_register_inside_block_still_fails(
     [ModbusError("offline"), TimeoutError("timed out"), IllegalDataValueError()],
 )
 async def test_digital_input_communication_errors_propagate(
-    unit: MockModbusUnit, device: WeiderWT16, error: Exception
+    unit: MockModbusUnit, device: WeiderWT16TCP, error: Exception
 ) -> None:
     with (
         patch.object(unit, "read_discrete_inputs", side_effect=error),
@@ -207,7 +209,7 @@ async def test_digital_input_communication_errors_propagate(
     ],
 )
 async def test_unsupported_optional_measurement(
-    unit: MockModbusUnit, device: WeiderWT16, field: str, address: int
+    unit: MockModbusUnit, device: WeiderWT16TCP, field: str, address: int
 ) -> None:
     unit.fail_read(address, IllegalDataAddressError(), register_type="input")
     await device.async_update()
@@ -217,11 +219,11 @@ async def test_unsupported_optional_measurement(
     rejected_reads = len([e for e in unit.read_events if e.address == address])
     await device.async_update()
     assert len([e for e in unit.read_events if e.address == address]) == rejected_reads
-    assert field in WeiderWT16(unit).measurements.resolved_fields
+    assert field in WeiderWT16TCP(unit).measurements.resolved_fields
 
 
 async def test_unsupported_core_measurement_still_fails(
-    unit: MockModbusUnit, device: WeiderWT16
+    unit: MockModbusUnit, device: WeiderWT16TCP
 ) -> None:
     unit.fail_read(15, IllegalDataAddressError(), register_type="input")
     with pytest.raises(IllegalDataAddressError):
@@ -230,7 +232,7 @@ async def test_unsupported_core_measurement_still_fails(
 
 
 async def test_unsupported_room_target(
-    unit: MockModbusUnit, device: WeiderWT16
+    unit: MockModbusUnit, device: WeiderWT16TCP
 ) -> None:
     unit.fail_read(723, IllegalDataAddressError(), register_type="holding")
     await device.async_update()
@@ -241,7 +243,7 @@ async def test_unsupported_room_target(
         await device.async_set_room_target(22)
 
 
-async def test_listeners_fire_once_after_full_poll(device: WeiderWT16) -> None:
+async def test_listeners_fire_once_after_full_poll(device: WeiderWT16TCP) -> None:
     seen: list[tuple[float | None, bool | None]] = []
 
     def listener() -> None:
@@ -271,7 +273,7 @@ async def test_listeners_fire_once_after_full_poll(device: WeiderWT16) -> None:
 )
 async def test_sg_ready_mode(
     unit: MockModbusUnit,
-    device: WeiderWT16,
+    device: WeiderWT16TCP,
     utility_block: bool,
     sg_ready_1: bool,
     sg_ready_2: bool,
@@ -282,18 +284,18 @@ async def test_sg_ready_mode(
     assert device.sg_ready_mode is expected
 
 
-async def test_sg_ready_mode_before_first_poll(device: WeiderWT16) -> None:
+async def test_sg_ready_mode_before_first_poll(device: WeiderWT16TCP) -> None:
     assert device.sg_ready_mode is None
 
 
-async def test_read_raw(device: WeiderWT16) -> None:
+async def test_read_raw(device: WeiderWT16TCP) -> None:
     raw = await device.async_read_raw()
     assert raw["input"][13] == 425
     assert raw["holding"][1] == 450
     assert raw["discrete"][679] is True
 
 
-def test_identity(device: WeiderWT16) -> None:
+def test_identity(device: WeiderWT16TCP) -> None:
     assert (device.manufacturer, device.model) == ("Weider", "WT16")
 
 
@@ -308,7 +310,7 @@ def test_identity(device: WeiderWT16) -> None:
 )
 async def test_current_room_temperature(
     unit: MockModbusUnit,
-    device: WeiderWT16,
+    device: WeiderWT16TCP,
     register_12: int,
     register_724: int,
     expected: float | None,
@@ -320,7 +322,7 @@ async def test_current_room_temperature(
 
 
 async def test_current_room_temperature_without_register_12(
-    unit: MockModbusUnit, device: WeiderWT16
+    unit: MockModbusUnit, device: WeiderWT16TCP
 ) -> None:
     unit.fail_read(12, IllegalDataAddressError(), register_type="input")
     unit.input[724] = 225
@@ -330,9 +332,17 @@ async def test_current_room_temperature_without_register_12(
 
 
 async def test_current_room_temperature_without_room_registers(
-    unit: MockModbusUnit, device: WeiderWT16
+    unit: MockModbusUnit, device: WeiderWT16TCP
 ) -> None:
     for address in (12, 724):
         unit.fail_read(address, IllegalDataAddressError(), register_type="input")
     await device.async_update()
     assert device.current_room_temperature is None
+
+
+def test_old_class_name_still_works() -> None:
+    import weider_modbus
+
+    with pytest.warns(DeprecationWarning, match="WeiderWT16TCP"):
+        old = weider_modbus.WeiderWT16
+    assert old is WeiderWT16TCP

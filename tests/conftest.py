@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from modbus_connection.mock import MockModbusUnit
 
-from weider_modbus import WeiderWT16
+from weider_modbus import WeiderWT16TCP
 
 
 @pytest.fixture
@@ -18,6 +18,6 @@ def unit(mock_modbus_unit: MockModbusUnit) -> MockModbusUnit:
 
 
 @pytest.fixture
-def device(unit: MockModbusUnit) -> WeiderWT16:
+def device(unit: MockModbusUnit) -> WeiderWT16TCP:
     """A WT16 over the mock unit."""
-    return WeiderWT16(unit)
+    return WeiderWT16TCP(unit)
