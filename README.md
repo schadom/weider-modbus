@@ -51,9 +51,8 @@ attribute of that device's components.
   mixer temperature, volume flow, flow switches, 4-way valve, SG Ready inputs,
   last pump runtime (32-bit) and the active error text.
 - **RTU only:** hot water hysteresis, heating limit temperature, average outdoor
-  temperature, summer/winter mode, flow target and flow temperature of heating
-  circuit 1, mixer 2 position, operating hours, last heating runtime, heat meter
-  energy (kWh), the active error number and the manual SG Ready mode.
+  temperature, summer/winter mode, operating hours, last heating runtime, heat
+  meter energy (kWh), the active error number and the manual SG Ready mode.
 
 On RTU, the runtimes and counters are 16-bit values. Only the two target
 temperatures are writable on either map.

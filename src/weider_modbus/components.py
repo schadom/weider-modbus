@@ -174,7 +174,10 @@ class Measurements(Component):
     # Room temperature on a custom Modbus map that Weider configures on
     # request. Such a map answers 0 at register 12 instead.
     custom_map_room_temperature = _temperature(724)
+    circuit_1_flow_target_temperature = _temperature(726)
+    circuit_1_flow_temperature = _temperature(727)
     mixer_position = integer(736, signed=False)
+    mixer_2_position = integer(767, signed=False)
     last_pump_runtime = uint32(60164, unit="min")
     last_hot_water_runtime = uint32(60168, unit="min")
     active_error = string(63000, 16)
@@ -184,7 +187,10 @@ class Measurements(Component):
         {
             "room_temperature",
             "custom_map_room_temperature",
+            "circuit_1_flow_target_temperature",
+            "circuit_1_flow_temperature",
             "mixer_position",
+            "mixer_2_position",
             "last_pump_runtime",
             "last_hot_water_runtime",
             "active_error",
