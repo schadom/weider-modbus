@@ -115,8 +115,8 @@ async def test_registers_read_in_blocks(
         (714, 1),
     ]
     assert blocks["input"] == [
-        (12, 10), (25, 5), (31, 1), (33, 1), (35, 3), (44, 1), (724, 1), (736, 1),
-        (60164, 2), (60168, 2), (63000, 16),
+        (12, 10), (25, 5), (31, 1), (33, 1), (35, 3), (44, 1), (724, 1), (726, 2),
+        (736, 1), (767, 1), (60164, 2), (60168, 2), (63000, 16),
     ]  # fmt: skip
     assert blocks["holding"] == [(1, 1), (723, 1)]
 
@@ -202,7 +202,10 @@ async def test_digital_input_communication_errors_propagate(
     [
         ("room_temperature", 12),
         ("custom_map_room_temperature", 724),
+        ("circuit_1_flow_target_temperature", 726),
+        ("circuit_1_flow_temperature", 727),
         ("mixer_position", 736),
+        ("mixer_2_position", 767),
         ("last_pump_runtime", 60164),
         ("last_hot_water_runtime", 60168),
         ("active_error", 63000),

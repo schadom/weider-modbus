@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "weider-modbus"
-version = "0.2.0"
+version = "0.3.0"
 description = "Async Python library for the Modbus TCP and RTU interfaces of Weider heat pumps, built on modbus-connection"
 readme = "README.md"
 license = "MIT"
